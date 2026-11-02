@@ -1,0 +1,8 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+# Pliki pakietu Office
+*.docx
+*.pptx
+*.xlsx

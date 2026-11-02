@@ -1,0 +1,94 @@
+---
+title: "EP_zaj4_Macierze_wag_przestrzennych"
+output: html_document
+date: "2026-10-26"
+---
+```{r}
+library(sf)		# for sf class
+library(ggplot2)	# for plotting in sf class
+library(sp)		# for sp class
+library(spdep)		# spatial statistics
+library(RColorBrewer)# nice colours
+library(mapview)
+library(tidyr)
+search() 
+
+```
+```{r}
+# reading regional data
+data<-read.csv("regional_dataset.csv", header=TRUE, sep=";", dec=",", encoding="UTF-8")
+data23<-data[data$year==2023,]
+
+# reading point data
+points<-read.csv("firms_data_utf8.csv", header=TRUE, sep=",", dec=".", encoding="UTF-8")
+points.sf<-st_as_sf(points, coords=c("crds.x", "crds.y"), crs=4326)
+
+# Read NUTS4 and NUTS2 contour map (shapefile) into sf class
+pov<-st_read("powiaty.shp", options = "ENCODING=UTF-8") # 380 units
+pov<-st_transform(pov, 4326) 		# reproject to WGS84
+pov<-st_make_valid(pov)			# correct the shapefile object
+
+voi<-st_read("wojewodztwa.shp", options="ENCODING=UTF-8") # 16 units 
+voi<-st_transform(voi, 4326) 		# reproject to WGS84
+
+# fragments of maps
+region.voi<-voi[voi$JPT_NAZWA_=="lubelskie",] # creating a map subset
+units<-which(data23$region_name=="lubelskie")
+region.pov<-pov[units, ] 
+
+```
+```{r}
+# reading regional data
+data<-read.csv("regional_dataset.csv", header=TRUE, sep=";", dec=",", encoding="UTF-8")
+data23<-data[data$year==2023,]
+
+# reading point data
+points<-read.csv("firms_data_utf8.csv", header=TRUE, sep=",", dec=".", encoding="UTF-8")
+points.sf<-st_as_sf(points, coords=c("crds.x", "crds.y"), crs=4326)
+
+# Read NUTS4 and NUTS2 contour map (shapefile) into sf class
+pov<-st_read("powiaty.shp", options = "ENCODING=UTF-8") # 380 units
+pov<-st_transform(pov, 4326) 		# reproject to WGS84
+pov<-st_make_valid(pov)			# correct the shapefile object
+
+voi<-st_read("wojewodztwa.shp", options="ENCODING=UTF-8") # 16 units 
+voi<-st_transform(voi, 4326) 		# reproject to WGS84
+
+# fragments of maps
+region.voi<-voi[voi$JPT_NAZWA_=="lubelskie",] # creating a map subset
+units<-which(data23$region_name=="lubelskie")
+region.pov<-pov[units, ] 
+
+```
+
+
+Wyklad 4 26.10
+Komendy Podstawowe i dodatkowe macierzy wag przestrzennych
+
+poly - poligony/mapa
+nb - neighborhood
+listw - list of weights
+
+Podstawowe / basic
+poly2nb			Construct neighbours list from polygon list
+nb2listw  		Spatial weights for neighbours lists
+knearneigh     	K nearest neighbours for spatial weights
+dnearneigh     	Neighbourhood contiguity by distance
+knn2nb         	Neighbours list from knn object
+is.symmetric.nb	Test a neighbours list for symmetry
+make.sym.nb(nb)	Makes a non-symmetric list symmetric by adding neighbors
+lag.listw          	Spatial lag of a numeric vector
+nbdists            	Spatial link distance measures
+nb2mat   			Spatial weights matrices for neighbours lists
+mat2listw      	Convert a square spatial weights matrix to a
+nblag              	Higher order neighbours lists
+
+
+
+Generalna zasada: 
+- do rysowania wykorzystuje się obiekty klasy nb
+- do obliczeń wykorzystuje się obiekty klasy listw
+
+General rule: 
+- for drawing use objects of class nb 
+- for calculations use objects of class listw
