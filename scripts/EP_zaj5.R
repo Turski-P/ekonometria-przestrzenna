@@ -4,7 +4,7 @@ library(spdep)
 library(ggplot2)
 library(RColorBrewer)
 
-setwd('/Users/przemekturski/Library/CloudStorage/OneDrive-Osobisty/Pliki studia/5. Ekonometria/Ekonometria_Przestrzenna/data')
+setwd('/Users/przemekturski/Library/CloudStorage/OneDrive-Osobisty/Pliki studia/5. Ekonometria/ekonometria-przestrzenna/data')
 
 data<-read.csv("regional_dataset.csv", header=TRUE, sep=";", dec=",", encoding="UTF-8")
 data23<-data[data$year==2023,]
