@@ -1,0 +1,132 @@
+---
+title: "EP_zaj6"
+output: html_document
+date: "2026-11-09"
+---
+```{r}
+library(sf)
+library(sp)
+library(spdep)
+library(ggplot2)
+library(RColorBrewer)
+library(spatialreg)		
+search()
+
+setwd('/Users/przemekturski/Library/CloudStorage/OneDrive-Osobisty/Pliki studia/5. Ekonometria/ekonometria-przestrzenna/data')
+
+# reading regional data
+data<-read.csv("regional_dataset.csv", header=TRUE, sep=";", dec=",", encoding="UTF-8")
+data23<-data[data$year==2023,]
+
+# reading point data
+points<-read.csv("firms_data_utf8.csv", header=TRUE, sep=",", dec=".", encoding="UTF-8")
+points.sf<-st_as_sf(points, coords=c("crds.x", "crds.y"), crs=4326)
+
+# Read NUTS4 and NUTS2 contour map (shapefile) into sf class
+pov<-st_read("powiaty.shp", options = "ENCODING=UTF-8") # 380 units
+pov<-st_transform(pov, 4326) 		# reproject to WGS84
+pov<-st_make_valid(pov)			# correct the shapefile object
+voi<-st_read("wojewodztwa.shp", options="ENCODING=UTF-8") # 16 units 
+voi<-st_transform(voi, 4326) 		# reproject to WGS84
+
+# fragments of maps
+region.voi<-voi[voi$JPT_NAZWA_=="lubelskie",] # creating a map subset
+units<-which(data23$region_name=="lubelskie")
+region.pov<-pov[units, ] 
+
+# macierz wag przestrzennych W wg kryterium wspólnej granicy
+# spatial weights matrix W – contiguity
+cont.nb<-poly2nb(pov)						# class nb
+cont.listw<-nb2listw(cont.nb, style="W")		# class listw
+
+# macierz wag przestrzennych W – odwrotna odległość
+# spatial weights matrix W – inverse distance
+crds<-st_centroid(st_geometry(pov)) 	# centroidy w sf / sf centroids
+pow.knn<-knearneigh(crds, k=379)	# knn for all regions (total 380) 
+pow.nb<-knn2nb(pow.knn)			# w klasie nb / here in nb class
+# macierz odwrotnej odległości / inverse distance matrix
+inv.dist<-nb2listwdist(pow.nb, crds, type="idw", style="raw", alpha=1, dmax=NULL, longlat=TRUE, zero.policy=NULL) # class "listw" "nb"   
+
+```
+
+# podstawowy model regresji liniowej
+
+# y	przeciętna płaca Polska=100%			(salary_avg_Poland_100p)
+# x1	stopa bezrobocia					(unemployment_rate)
+# x2	odległość powiatu od miasta wojew.		(dist)
+# x3	liczba urodzeń na 1000 mieszk.		(birth_per_1K)
+# x4 liczba zgonów na 1000 mieszk.			(death_per_1K)
+# x5 inwestycje firm per capita			(invest_pc_PLN)
+# x6 aktywa w gospodarce per capita		(fixed_assets_pc_PLN)
+# x7 nowe firmy per capita				(new_firms_per_10K_inhab)
+
+# Basic linear regression model
+# y	average salary Poland = 100%			(salary_avg_Poland_100p)
+# x1	unemployment rate					(unemployment_rate)
+# x2	distance to core city of region		(dist)
+# x3	births per 1K inhab					(birth_per_1K)
+# x4 deaths per 1K inhab					(death_per_1K)
+# x5 firms’ investments per capita			(invest_pc_PLN)
+# x6 assets in economy per capita			(fixed_assets_pc_PLN)
+# x7 new firms per capita				(new_firms_per_10K_inhab)
+
+
+# inne zmienne do wykorzystania / other variable to use
+# x8 gęstość zaludnienia				(persons_per_1km2)
+# x9 stopa urbanizacji				(urbanisation_pp)
+# x10 odsetek ludności w wieku prod	(persons_productive_age_K/ persons_in_K)
+# x11 stopa inwestycji publicznych		(invest_share_pp)
+# x12 zamknięte firmy per capita		(closed_firms_per_10K_inhab)
+# x13 małe firmy per capita 			(small_firms_per_10k_inhab)
+# x14 duże firmy per capita		(total_firms_empl.49_per_10K_inhab)
+# x15 nowe medyczne firmy pc			(new_medical_firms_pp)
+# x16 nowe kreatywne firmy pc			(new_creative_firms_pp)
+
+
+```{r}
+# przygotowanie danych / # data preparation
+sub<-data[data$year==2022, ]		# wybór roku / selection of year
+sub$y<-sub$salary_avg_Poland_100p
+sub$x1<-sub$unemployment_rate
+sub$x2<-sub$dist
+sub$x3<-sub$birth_per_1K
+sub$x4<-sub$death_per_1K
+sub$x5<-sub$invest_pc_PLN
+sub$x6<-sub$fixed_assets_pc_PLN
+sub$x7<-sub$new_firms_per_10K_inhab
+
+
+# dodatkowe zmienne / alternative variables to try
+sub$x8<-sub$persons_per_1km2
+sub$x9<-sub$urbanisation_pp
+sub$x10<-sub$persons_productive_age_K/sub$persons_in_K
+sub$x11<-sub$invest_share_pp
+sub$x12<-sub$closed_firms_per_10K_inhab 
+sub$x13<-sub$small_firms_per_10k_inhab
+sub$x14<-sub$total_firms_empl.49_per_10K_inhab
+sub$x15<-sub$new_medical_firms_pp
+sub$x16<-sub$new_creative_firms_pp
+
+# równanie modelu / model equation 
+eq<-y~x1+x2+x3+x4+x5+x6+x7
+
+# szybka mapa zmiennej y / quick map of y
+library(colorspace)
+pal<-rev(sequential_hcl(7, palette="Teal"))
+swatchplot(pal)
+pov$y<-sub$y
+
+ggplot() + geom_sf(data=pov, aes(fill=y), color=NA) + scale_fill_gradientn(colors=pal) + ggtitle("Dependent variable y") + geom_sf(data=voi, color="black", fill=NA)
+
+```
+
+```{r}
+# podstawowy model liniowy / basic linear model
+
+eq<-y~x1+x2+x3+x4+x5+x6+x7
+model.lm<-lm(eq, data=sub)
+summary(model.lm)
+
+```
+
+
