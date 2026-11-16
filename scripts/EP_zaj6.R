@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 #Podstawowe modele ekonometryczne
 
 library(sf)
@@ -42,3 +43,8 @@ pow.knn<-knearneigh(crds, k=379)	# knn for all regions (total 380)
 pow.nb<-knn2nb(pow.knn)			# w klasie nb / here in nb class
 # macierz odwrotnej odległości / inverse distance matrix
 inv.dist<-nb2listwdist(pow.nb, crds, type="idw", style="raw", alpha=1, dmax=NULL, longlat=TRUE, zero.policy=NULL) # class "listw" "nb"   
+=======
+#proba gita na innym komputerze, kod niewazny.
+test <- c(1,5,3,'5')
+#eksperyment 2, wczesniej nie wlaczylem Rprojekt, a sam skrypt
+>>>>>>> 735cb55aa71a47d8053ce0fd5465c8aa4abbc278
