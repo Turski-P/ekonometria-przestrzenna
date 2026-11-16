@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 #Podstawowe modele ekonometryczne
 
 library(sf)
